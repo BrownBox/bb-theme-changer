@@ -5,7 +5,7 @@
  * Description: Adds the ability to select a theme per post
  * Author: Brown Box
  * Author URI: http://brownbox.net.au
- * Version: 1.0
+ * Version: 2.0
  */
 require_once('meta_.php');
 
@@ -140,5 +140,29 @@ function bb_theme_changer_redirect() {
         $qs = http_build_query($atts);
         wp_redirect('?'.$qs);
         exit;
+    }
+}
+
+add_action('switch_theme', 'bb_theme_changer_on_switch_theme');
+function bb_theme_changer_on_switch_theme() {
+    $old_theme = get_option('theme_switched');
+    $args = array(
+            'post_type' => 'any',
+            'posts_per_page' => -1,
+            'meta_query' => array(
+                    'relation' => 'OR',
+                    array(
+                            'key' => 'post_theme',
+                            'value' => '',
+                    ),
+                    array(
+                            'key' => 'post_theme',
+                            'compare' => 'NOT EXISTS',
+                    ),
+            ),
+    );
+    $posts = get_posts($args);
+    foreach ($posts as $post) {
+        update_post_meta($post->ID, 'post_theme', $old_theme);
     }
 }
